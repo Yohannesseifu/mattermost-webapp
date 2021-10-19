@@ -4,7 +4,7 @@
 import {combineReducers} from 'redux';
 
 import TimeManagementTypes from 'utils/time_management/action_types';
-import {dateToWorkDateString} from 'utils/time_management/utils';
+import {dateToWorkDateString, findAvailableSlot} from 'utils/time_management/utils';
 import {WorkItem, WorkBlock} from 'types/time_management';
 
 import {generateId} from 'utils/utils';
@@ -115,11 +115,13 @@ export function workBlocksByDay(state: Dictionary<WorkBlock[]> = testWorkItemsBy
         const task = action.task as WorkItem;
 
         const day = [...state[stringDate]] || [];
-        day.push({
+        const block = {
             id: generateId(),
             start: date,
             tasks: [task],
-        });
+        };
+        block.start = findAvailableSlot(block, day);
+        day.push(block);
 
         return {...state, [stringDate]: day};
     }

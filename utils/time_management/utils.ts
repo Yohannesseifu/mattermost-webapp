@@ -17,13 +17,30 @@ export function calculateMinutesInBlock(block: WorkBlock): number {
     return block.tasks.reduce((a, b) => a + b.time, 0);
 }
 
+const dayStartHour = 9;
+
 export function findAvailableSlot(block: WorkBlock, blocks: WorkBlock[]): Date {
+    const dayStart = new Date();
+    dayStart.setHours(dayStartHour, 0, 0, 0);
+
+    if (blocks.length === 0) {
+        return dayStart;
+    }
+
     const sortedBlocksByStart = [...blocks].sort((a: WorkBlock, b: WorkBlock) => {
         return a.start - b.start;
     });
 
     const minutesRequired = calculateMinutesInBlock(block);
 
+    // Check if there's an open slot between day start and the first block.
+    const firstBlockStart = moment(sortedBlocksByStart[0].start);
+    const minutesBetweenDayStartAndFirstBlock = moment.duration(firstBlockStart.diff(moment(dayStart))).asMinutes();
+    if (minutesBetweenDayStartAndFirstBlock >= minutesRequired) {
+        return dayStart;
+    }
+
+    // Find an open slot between other work blocks.
     for (let i = 0; i < sortedBlocksByStart.length; i++) {
         const currentBlock = sortedBlocksByStart[i];
         const minutesInCurrentBlock = calculateMinutesInBlock(currentBlock);
@@ -43,5 +60,5 @@ export function findAvailableSlot(block: WorkBlock, blocks: WorkBlock[]): Date {
         }
     }
 
-    return new Date();
+    return dayStart;
 }
