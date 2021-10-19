@@ -14,7 +14,7 @@ export function isBlockStartTimeEqual(a: WorkBlock, b: WorkBlock) {
 }
 
 export function calculateMinutesInBlock(block: WorkBlock): number {
-    return block.queue.reduce((a, b) => a + b.time, 0);
+    return block.tasks.reduce((a, b) => a + b.time, 0);
 }
 
 export function findAvailableSlot(block: WorkBlock, blocks: WorkBlock[]): Date {

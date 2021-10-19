@@ -6,10 +6,12 @@ import styled from 'styled-components';
 import moment from 'moment';
 import {useIntl} from 'react-intl';
 import {useDrop} from 'react-dnd';
+import {useDispatch} from 'react-redux';
 
 import {WorkBlock} from 'types/time_management';
 import {PixelPerMinute, DragTypes} from 'utils/time_management/constants';
 import {findAvailableSlot} from 'utils/time_management/utils';
+import {updateWorkBlocks} from 'actions/time_management';
 
 import Block from './block';
 import Hour from './hour';
@@ -76,6 +78,7 @@ const defaultProps = {
 const Calendar = (props: Props) => {
     const {date, dayStart, dayEnd, blocks: defaultBlocks} = props;
     const {formatDate} = useIntl();
+    const dispatch = useDispatch();
     const [blocks, setBlocks] = useState(defaultBlocks);
 
     let workingHours = dayEnd.getHours() - dayStart.getHours();
@@ -107,6 +110,19 @@ const Calendar = (props: Props) => {
         }
 
         setBlocks(newBlocks);
+        dispatch(updateWorkBlocks(newBlocks, date));
+    };
+
+    const updateBlock = (block: WorkBlock) => {
+        const index = blocks.findIndex((b) => b.id === block.id);
+        if (index < 0) {
+            return;
+        }
+
+        const newBlocks = [...blocks];
+        newBlocks.splice(index, 1, block);
+        setBlocks(newBlocks);
+        dispatch(updateWorkBlocks(newBlocks, date));
     };
 
     const ref = useRef(null);
@@ -172,6 +188,7 @@ const Calendar = (props: Props) => {
                             key={block.id}
                             block={block}
                             dayStart={dayStart}
+                            updateBlock={updateBlock}
                         />),
                     )}
                 </HourContainer>

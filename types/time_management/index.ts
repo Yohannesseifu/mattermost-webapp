@@ -4,15 +4,16 @@
 import {Dictionary} from 'mattermost-redux/types/utilities';
 
 export type WorkItem = {
+    id: string;
     title: string;
     time: number;
+    complete: boolean;
 }
 
 export type WorkBlock = {
     id: string;
     start: Date;
-    minTime: number;
-    queue: WorkItem[];
+    tasks: WorkItem[];
 };
 
 export type TimeState = {

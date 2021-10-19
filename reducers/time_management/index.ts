@@ -5,7 +5,9 @@ import {combineReducers} from 'redux';
 
 import TimeManagementTypes from 'utils/time_management/action_types';
 import {dateToWorkDateString} from 'utils/time_management/utils';
-import {WorkItem} from 'types/time_management';
+import {WorkItem, WorkBlock} from 'types/time_management';
+
+import {generateId} from 'utils/utils';
 
 import {UserTypes} from 'mattermost-redux/action_types';
 import {GenericAction} from 'mattermost-redux/types/actions';
@@ -23,41 +25,65 @@ const testWorkItemsByDay = {
         {
             id: '1',
             start: getTodayAtHour(9),
-            queue: [{
+            tasks: [{
+                id: '1',
                 title: 'Morning systems check',
                 time: 30,
+                complete: true,
             }],
         },
         {
             id: '2',
             start: getTodayAtHour(10),
-            queue: [{
-                title: 'Visit Mons Olympus',
-                time: 120,
-            }],
+            tasks: [
+                {
+                    id: '2',
+                    title: 'Drive to Mons Olympus',
+                    time: 60,
+                    complete: false,
+                },
+                {
+                    id: '3',
+                    title: 'Climb to the top',
+                    time: 30,
+                    complete: false,
+                },
+                {
+                    id: '4',
+                    title: 'Roll down',
+                    time: 30,
+                    complete: false,
+                },
+            ],
         },
         {
             id: '3',
             start: getTodayAtHour(12),
-            queue: [{
+            tasks: [{
+                id: '5',
                 title: 'Eat a uranium isotope for lunch',
                 time: 60,
+                complete: false,
             }],
         },
         {
             id: '4',
             start: getTodayAtHour(14, 30),
-            queue: [{
+            tasks: [{
+                id: '6',
                 title: 'Take some dirt samples',
                 time: 120,
+                complete: false,
             }],
         },
         {
             id: '5',
             start: getTodayAtHour(16, 30),
-            queue: [{
+            tasks: [{
+                id: '7',
                 title: 'Feel lonely',
                 time: 30,
+                complete: false,
             }],
         },
     ],
@@ -65,12 +91,16 @@ const testWorkItemsByDay = {
 
 const testUnscheduledWorkItems = [
     {
+        id: '8',
         title: 'Charge via solar panels',
         time: 60,
+        complete: false,
     },
     {
+        id: '9',
         title: 'Call home base at Houston',
         time: 60,
+        complete: false,
     },
 ];
 
@@ -85,9 +115,22 @@ export function workBlocksByDay(state: Dictionary<WorkBlock[]> = testWorkItemsBy
         const task = action.task as WorkItem;
 
         const day = [...state[stringDate]] || [];
-        day.push(task);
+        day.push({
+            id: generateId(),
+            start: date,
+            tasks: [task],
+        });
 
         return {...state, [stringDate]: day};
+    }
+    case TimeManagementTypes.RECEIVED_WORK_BLOCKS: {
+        const date = action.date as Date;
+        if (!date) {
+            return state;
+        }
+        const stringDate = dateToWorkDateString(date);
+
+        return {...state, [stringDate]: action.blocks};
     }
     case UserTypes.LOGOUT_SUCCESS:
         return {};

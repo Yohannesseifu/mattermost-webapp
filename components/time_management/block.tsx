@@ -10,6 +10,9 @@ import {PixelPerMinute, DragTypes} from 'utils/time_management/constants';
 import {calculateMinutesInBlock} from 'utils/time_management/utils';
 import {WorkBlock} from 'types/time_management';
 
+import ChecklistItemComponent from './checklist_item';
+import {ChecklistItemState, newChecklistItem} from './types';
+
 const Container = styled.div`
     background: linear-gradient(0deg, rgba(63, 67, 80, 0.04), rgba(63, 67, 80, 0.04)), #FFFFFF;
     border: 1px solid rgba(61, 60, 64, 0.16) !important;
@@ -42,10 +45,11 @@ const Task = styled.div`
 type Props = {
     block: WorkBlock;
     dayStart: Date;
+    updateBlock: (block: WorkBlock) => void;
 }
 
 const Block = (props: Props) => {
-    const {block, dayStart} = props;
+    const {block, dayStart, updateBlock} = props;
     const ref = useRef(null);
 
     const [{isDragging}, drag] = useDrag({
@@ -62,6 +66,20 @@ const Block = (props: Props) => {
     const totalMinutes = calculateMinutesInBlock(block);
     const minutesFromDayStart = moment(block.start).diff(dayStart, 'minutes');
 
+    const updateTaskCompletion = (taskId: string, state: ChecklistItemState) => {
+        const index = block.tasks.findIndex((task) => task.id === taskId);
+        if (index < 0) {
+            return;
+        }
+        const newTask = {...block.tasks[index]};
+        newTask.complete = state === ChecklistItemState.Closed;
+        const newBlock = {...block};
+        const newTasks = [...newBlock.tasks];
+        newTasks.splice(index, 1, newTask);
+        newBlock.tasks = newTasks;
+        updateBlock(newBlock);
+    };
+
     drag(ref);
     return (
         <Container
@@ -73,10 +91,14 @@ const Block = (props: Props) => {
                 opacity,
             }}
         >
-            {block.queue.map((task) => {
+            {block.tasks.map((task) => {
                 return (
                     <Task key={task.title}>
-                        {task.title}
+                        <ChecklistItemComponent
+                            checklistItem={newChecklistItem(task.title, undefined, task.complete ? ChecklistItemState.Closed : ChecklistItemState.Open)}
+                            disabled={false}
+                            onChange={(item) => updateTaskCompletion(task.id, item)}
+                        />
                     </Task>
                 );
             })}
